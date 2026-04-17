@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes.scan import router as scan_router
+from app.routes import scan 
 from app.core.exceptions import http_exception_handler, general_exception_handler
 
 
@@ -25,4 +25,5 @@ app.add_exception_handler(Exception, general_exception_handler)
 
 
 # ── 4. Connect the routes ──────────────────────────────
-app.include_router(scan_router)
+# app.include_router(scan_router)
+app.include_router(scan.router, prefix="/scan", tags=["User"])
