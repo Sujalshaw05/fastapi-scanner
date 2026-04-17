@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Scanner</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 40px; }
+    video { width: 300px; border: 2px solid black; }
+    canvas { display: none; }
+    button { margin: 10px; padding: 10px 20px; }
+    #result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h2>QR Scanner</h2>
+
+  <button onclick="startCamera(1)">Option 1: Scan Data</button>
+  <button onclick="startCamera(2)">Option 2: Scan URL</button>
+
+  <br><br>
+
+  <video id="video" autoplay></video>
+  <br>
+  <button onclick="captureImage()">Scan</button>
+
+  <canvas id="canvas"></canvas>
+
+  <div id="result"></div>
+
+  <script>
+    let video = document.getElementById('video');
+    let canvas = document.getElementById('canvas');
+    let ctx = canvas.getContext('2d');
+    let currentOption = 1;
+
+    async function startCamera(option) {
+      currentOption = option;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Camera access denied or not available");
+      }
+    }
+
+    async function captureImage() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+
+      canvas.toBlob(async function(blob) {
+        let formData = new FormData();
+        formData.append('file', blob, 'frame.jpg');
+
+        let endpoint = currentOption === 1 ? 
+          'http://127.0.0.1:8000/scan/scan-frame' : 
+          'http://127.0.0.1:8000/scan/scan_url_verification_or_search';
+
+        try {
+          let response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData
+          });
+
+          let data = await response.json();
+
+          document.getElementById('result').innerText = JSON.stringify(data);
+        } catch (error) {
+          document.getElementById('result').innerText = "Error: " + error;
+        }
+      }, 'image/jpeg');
+    }
+  </script>
+
+</body>
+</html>
